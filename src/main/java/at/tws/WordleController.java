@@ -1,34 +1,102 @@
 package at.tws;
 
 import java.io.IOException;
+import java.util.List;
 
 public class WordleController {
     private final WordleModel model;
     private final WordleView view;
+
+    private int currentYPosition = 2; // Zarządzanie pozycją w kontrolerze
+
+
 
     public WordleController(WordleModel model, WordleView view) {
         this.model = model;
         this.view = view;
     }
 
-    public void startGame() throws IOException {
+    public void startGameLoop() throws IOException {
         while (true) {
-            view.displayMessage(1,1,"Input 5-letter word: ");
-            String word = view.readInput().toUpperCase();
+            if (!displayMainMenu()) {
+                break; // Wyjście z gry
+            }
+
+            playGame(); // Główna rozgrywka
+
+            if (!displayPlayAgainMenu()) {
+                break; // Koniec gry
+            }
+        }
+    }
+
+    private boolean displayMainMenu() throws IOException {
+        List<String> menuOptions = List.of("Start Game", "Exit");
+        int selectedOption = 0;
+
+        while (true) {
+            view.displayMenu(menuOptions, selectedOption);
+            int userInput = view.getMenuSelection();
+
+            switch (userInput) {
+                case -1: // Strzałka w górę
+                    selectedOption = (selectedOption - 1 + menuOptions.size()) % menuOptions.size();
+                    break;
+                case 1: // Strzałka w dół
+                    selectedOption = (selectedOption + 1) % menuOptions.size();
+                    break;
+                case 0: // Enter
+                    view.clearArea(0, 0, 40);
+                    view.clearArea(0, 1, 40);
+                    return selectedOption == 0; // "Start Game" -> true, "Exit" -> false
+            }
+        }
+    }
+
+    private boolean displayPlayAgainMenu() throws IOException {
+        List<String> menuOptions = List.of("Play Again", "Exit");
+        int selectedOption = 0;
+
+        while (true) {
+            view.displayMenu(menuOptions, selectedOption);
+            int userInput = view.getMenuSelection();
+
+            switch (userInput) {
+                case -1: // Strzałka w górę
+                    selectedOption = (selectedOption - 1 + menuOptions.size()) % menuOptions.size();
+                    break;
+                case 1: // Strzałka w dół
+                    selectedOption = (selectedOption + 1) % menuOptions.size();
+                    break;
+                case 0: // Enter
+                    view.clearArea(0, 0, 40);
+                    view.clearArea(0, 1, 40);
+                    return selectedOption == 0; // "Play Again" -> true, "Exit" -> false
+            }
+        }
+    }
+
+    private void playGame() throws IOException {
+        model.resetGame();
+        currentYPosition = 2; // Resetuj pozycję na początku gry
+
+        while (true) {
+            view.displayMessage(1, 1, "Input 5-letter word: ");
+            String word = view.readInput(currentYPosition).toUpperCase();
 
             if (word.length() != 5) {
-                view.displayMessage(22,1,"Input word with exactly 5 letters!");
-                view.clearInputArea();
+                view.displayMessage(22, 1, "Input word with exactly 5 letters!");
+                view.clearArea(2, currentYPosition, 40);
                 continue;
             }
 
+            view.clearArea(2, currentYPosition, 10); // Czyść poprzednie słowo w tym samym miejscu
             if (model.guessWord(word)) {
                 view.displayWinMessage();
                 break;
             } else {
-                // Generowanie podpowiedzi
                 WordleModel.Color[] colors = model.hint(word);
-                view.displayHint(word, colors); // Wyświetlenie podpowiedzi
+                view.displayHint(word, colors, currentYPosition); // Użyj bieżącej pozycji
                 view.displayAlphabet(model.getAlphabetColors());
             }
 
@@ -36,7 +104,8 @@ public class WordleController {
                 view.displayLoseMessage(model.getWordToGuess());
                 break;
             }
-            view.clearInputArea();
+
+            currentYPosition++; // Zwiększ pozycję po każdym wyświetleniu podpowiedzi
         }
     }
 }

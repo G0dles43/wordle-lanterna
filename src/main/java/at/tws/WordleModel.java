@@ -35,27 +35,35 @@ public class WordleModel {
     }
 
     public Color[] hint(String word) {
-        Color[] colors = new Color[word.length()]; // Tablica kolorów o długości słowa
-        StringBuilder pomWordToGuess = new StringBuilder(wordToGuess);
+        Color[] colors = new Color[word.length()];
+        StringBuilder wordToGuessCopy = new StringBuilder(wordToGuess);
 
-        for (int index = 0; index < word.length(); index++) {
-            char letter = word.charAt(index);
-            if (letter == pomWordToGuess.charAt(index)) {
-                // Litera w dobrej pozycji - zielony
-                colors[index] = Color.GREEN;
-                pomWordToGuess.setCharAt(index, '~'); // Znak zastępujący
-            } else if (pomWordToGuess.indexOf(Character.toString(letter)) != -1) {
-                // Litera w złej pozycji - żółty
-                colors[index] = Color.YELLOW;
-                int foundIndex = pomWordToGuess.indexOf(Character.toString(letter));
-                pomWordToGuess.setCharAt(foundIndex, '~'); // Znak zastępujący
-            } else {
-                // Litera, której nie ma w słowie - czerwony
-                colors[index] = Color.RED;
+        // Pierwsza pętla: Sprawdzenie poprawnych liter w poprawnych miejscach (zielony)
+        for (int i = 0; i < word.length(); i++) {
+            char letter = word.charAt(i);
+            if (letter == wordToGuess.charAt(i)) {
+                colors[i] = Color.GREEN;
+                wordToGuessCopy.setCharAt(i, '~'); // Usuwamy tę literę z dalszej analizy
             }
         }
+
+        // Druga pętla: Sprawdzenie liter, które są w słowie, ale w złym miejscu (żółty)
+        for (int i = 0; i < word.length(); i++) {
+            char letter = word.charAt(i);
+            if (colors[i] == null) { // Jeśli litera jeszcze nie została oznaczona jako zielona
+                if (wordToGuessCopy.indexOf(String.valueOf(letter)) != -1) {
+                    colors[i] = Color.YELLOW;
+                    // Zastępujemy tę literę w kopii, by nie była użyta więcej niż raz
+                    wordToGuessCopy.setCharAt(wordToGuessCopy.indexOf(String.valueOf(letter)), '~');
+                } else {
+                    colors[i] = Color.RED; // Jeśli litera nie ma miejsca w słowie, kolorujemy na czerwono
+                }
+            }
+        }
+
         return colors;
     }
+
 
     // Definicja prostego enum dla kolorów
     public Map<Character, Color> getAlphabetColors() {
@@ -83,7 +91,15 @@ public class WordleModel {
         return alphabetColors;
     }
 
+    public void resetGame() {
+        this.wordToGuess = wordProvider.fetchRandomWord();
+        this.attempts = 0;
+        this.usedLetters.clear();
+    }
 
+    public WordleWordProvider getWordProvider() {
+        return wordProvider;
+    }
     public Set<Character> getUsedLetters() {
         return usedLetters;  // Zwraca zbiór użytych liter
     }

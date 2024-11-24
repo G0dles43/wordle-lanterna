@@ -6,37 +6,64 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class WordleView {
     private final Screen screen;
     private final TextGraphics textGraphics;
 
-    private int currentYPosition=2;
+    private int currentYPosition = 2;
 
     public WordleView(Screen screen) {
         this.screen = screen;
         this.textGraphics = screen.newTextGraphics();
     }
 
-    public void displayMessage(int positonX, int positionY, String message) throws IOException {
-        textGraphics.putString(positonX, positionY, message, SGR.BOLD);
+    public void displayMenu(List<String> options, int selectedOption) throws IOException {
+        screen.clear();
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+
+        int yPosition = 0; // Startowa pozycja Y dla menu
+        for (int i = 0; i < options.size(); i++) {
+            if (i == selectedOption) {
+                textGraphics.setForegroundColor(TextColor.ANSI.GREEN);
+                textGraphics.putString(0, yPosition, "> " + options.get(i), SGR.BOLD);
+            } else {
+                textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+                textGraphics.putString(1, yPosition, options.get(i));
+            }
+            yPosition++;
+        }
+
         screen.refresh();
     }
 
-    public void displayHint(String word, WordleModel.Color[] colors) throws IOException {
+    public int getMenuSelection() throws IOException {
+        KeyStroke keyStroke = screen.readInput();
+        if (keyStroke.getKeyType() == KeyType.ArrowUp) {
+            return -1; // Strzałka w górę
+        } else if (keyStroke.getKeyType() == KeyType.ArrowDown) {
+            return 1; // Strzałka w dół
+        } else if (keyStroke.getKeyType() == KeyType.Enter) {
+            return 0; // Klawisz Enter
+        }
+        return Integer.MIN_VALUE; // Ignoruj inne klawisze
+    }
 
+    public void displayMessage(int positionX, int positionY, String message) throws IOException {
+        textGraphics.putString(positionX, positionY, message, SGR.BOLD);
+        screen.refresh();
+    }
 
-        int xPosition = 2; // Początkowa pozycja X
+    public void displayHint(String word, WordleModel.Color[] colors, int yPosition) throws IOException {
+        int xPosition = 2;
 
         for (int i = 0; i < word.length(); i++) {
             char letter = word.charAt(i);
 
-            // Ustawiamy kolor na podstawie tablicy kolorów
             switch (colors[i]) {
                 case GREEN:
                     textGraphics.setForegroundColor(TextColor.ANSI.GREEN);
@@ -51,14 +78,35 @@ public class WordleView {
                     textGraphics.setForegroundColor(TextColor.ANSI.DEFAULT);
             }
 
-            // Wyświetlanie litery w odpowiednim kolorze
-            textGraphics.putString(xPosition, currentYPosition, String.valueOf(letter), SGR.BOLD);
+            textGraphics.putString(xPosition, yPosition, String.valueOf(letter), SGR.BOLD);
             xPosition++;
         }
 
-        currentYPosition++;
-        // Odswieżenie ekranu po wyświetleniu podpowiedzi
         screen.refresh();
+    }
+
+
+    public String readInput(int currentYPosition) throws IOException {
+        StringBuilder userInput = new StringBuilder();
+        KeyStroke keyStroke;
+
+        while (true) {
+            keyStroke = screen.readInput();
+            if (keyStroke.getKeyType() == KeyType.Enter) {
+                break;
+            } else if (keyStroke.getKeyType() == KeyType.Character && userInput.length() < 5) {
+                userInput.append(keyStroke.getCharacter());
+                textGraphics.putString(2 + userInput.length() - 1, currentYPosition,
+                        String.valueOf(keyStroke.getCharacter()), SGR.BOLD);
+                screen.refresh();
+            } else if (keyStroke.getKeyType() == KeyType.Backspace && userInput.length() > 0) {
+                int deletePosition = 2 + userInput.length() - 1;
+                textGraphics.putString(deletePosition, currentYPosition, " ", SGR.BOLD);
+                userInput.deleteCharAt(userInput.length() - 1);
+                screen.refresh();
+            }
+        }
+        return userInput.toString();
     }
 
     public void displayAlphabet(Map<Character, WordleModel.Color> alphabetColors) throws IOException {
@@ -67,7 +115,7 @@ public class WordleView {
 
         for (char letter : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray()) {
             WordleModel.Color color = alphabetColors.get(letter);
-            // Ustawiamy odpowiedni kolor na podstawie stanu litery
+
             if (color != null) {
                 switch (color) {
                     case GREEN:
@@ -83,66 +131,36 @@ public class WordleView {
                         textGraphics.setForegroundColor(TextColor.ANSI.DEFAULT);
                 }
             } else {
-                textGraphics.setForegroundColor(TextColor.ANSI.DEFAULT); // Domyślny kolor
+                textGraphics.setForegroundColor(TextColor.ANSI.DEFAULT);
             }
-            if (letter=='N'){
+
+            if (letter == 'N') {
                 yPosition++;
-                xPosition=2;
+                xPosition = 2;
             }
-            // Wyświetlanie litery
+
             textGraphics.putString(xPosition, yPosition, String.valueOf(letter), SGR.BOLD);
             xPosition++;
         }
 
         screen.refresh();
     }
-    // Dodanie metody wyświetlającej komunikat o wygranej
+
     public void displayWinMessage() throws IOException {
         textGraphics.putString(2, 9, "Congratulations! You win!", SGR.BOLD);
         screen.refresh();
-        screen.readInput();
+        screen.readInput(); // Czeka na interakcję
     }
 
-    // Dodanie metody wyświetlającej komunikat o przegranej
     public void displayLoseMessage(String wordToGuess) throws IOException {
         textGraphics.putString(2, 9, "You lost! The word was: " + wordToGuess, SGR.BOLD);
         screen.refresh();
-        screen.readInput();
+        screen.readInput(); // Czeka na interakcję
     }
-
-    public String readInput() throws IOException {
-        StringBuilder userInput = new StringBuilder();
-        KeyStroke keyStroke;
-
-        while (true) {
-            keyStroke = screen.readInput();
-            if (keyStroke.getKeyType() == KeyType.Enter) {
-                break;
-            } else if (keyStroke.getKeyType() == KeyType.Character && userInput.length() < 5) {
-                // Dodanie znaku
-                userInput.append(keyStroke.getCharacter());
-                textGraphics.putString(2 + userInput.length() - 1, currentYPosition,
-                        String.valueOf(keyStroke.getCharacter()), SGR.BOLD);
-                screen.refresh();
-            } else if (keyStroke.getKeyType() == KeyType.Backspace && userInput.length() > 0) {
-                // Usunięcie ostatniego znaku
-                int deletePosition = 2 + userInput.length() - 1;
-                textGraphics.putString(deletePosition, currentYPosition, " ", SGR.BOLD);
-                userInput.deleteCharAt(userInput.length() - 1);
-
-                screen.refresh();
-            }
-        }
-        return userInput.toString();
-    }
-
-    public void clearInputArea() throws IOException {
-        // Czyszczenie dokładnie pięciu pozycji w wierszu
-        for (int i = 0; i < 5; i++) {
-            textGraphics.putString(2 + i, currentYPosition, " ", SGR.BOLD);
+    public void clearArea(int x, int y, int quantity) throws IOException {
+        for (int i = 0; i < quantity; i++) {
+            textGraphics.putString(x, y, " ".repeat(50), SGR.BOLD);
         }
         screen.refresh();
     }
-
-
 }

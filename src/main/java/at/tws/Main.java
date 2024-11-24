@@ -1,7 +1,5 @@
 package at.tws;
 
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -15,24 +13,16 @@ public class Main {
             Terminal terminal = new DefaultTerminalFactory().createTerminal();
             Screen screen = new TerminalScreen(terminal);
             screen.startScreen();
-            screen.clear();
 
-            WordleModel model = new WordleModel();
             WordleView view = new WordleView(screen);
+            WordleModel model = new WordleModel();
             WordleController controller = new WordleController(model, view);
 
-            controller.startGame();
+            controller.startGameLoop();
+
             screen.stopScreen();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 }
-
-
-
-
-
-
-
-
