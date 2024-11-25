@@ -15,8 +15,6 @@ public class WordleView {
     private final Screen screen;
     private final TextGraphics textGraphics;
 
-    private int currentYPosition = 2;
-
     public WordleView(Screen screen) {
         this.screen = screen;
         this.textGraphics = screen.newTextGraphics();
@@ -26,11 +24,12 @@ public class WordleView {
         screen.clear();
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
 
-        int yPosition = 0; // Startowa pozycja Y dla menu
+        int yPosition = 1; // Startowa pozycja Y dla menu
+        textGraphics.putString(5, 0, "WORDLE" , SGR.BOLD);
         for (int i = 0; i < options.size(); i++) {
             if (i == selectedOption) {
                 textGraphics.setForegroundColor(TextColor.ANSI.GREEN);
-                textGraphics.putString(0, yPosition, "> " + options.get(i), SGR.BOLD);
+                textGraphics.putString(1, yPosition, "> " + options.get(i), SGR.BOLD);
             } else {
                 textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
                 textGraphics.putString(1, yPosition, options.get(i));

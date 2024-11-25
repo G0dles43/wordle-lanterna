@@ -48,6 +48,7 @@ public class WordleController {
                 case 0: // Enter
                     view.clearArea(0, 0, 40);
                     view.clearArea(0, 1, 40);
+                    view.clearArea(0, 2, 40);
                     return selectedOption == 0; // "Start Game" -> true, "Exit" -> false
             }
         }
@@ -90,6 +91,12 @@ public class WordleController {
                 continue;
             }
 
+            if (!model.isWordValid(word)) {
+                view.displayMessage(22, 1, "Incorrect word! Please try again.");
+                view.clearArea(2, currentYPosition, 40);
+                continue;
+            }
+
             view.clearArea(2, currentYPosition, 10); // Czyść poprzednie słowo w tym samym miejscu
             if (model.guessWord(word)) {
                 view.displayWinMessage();
@@ -108,4 +115,5 @@ public class WordleController {
             currentYPosition++; // Zwiększ pozycję po każdym wyświetleniu podpowiedzi
         }
     }
+
 }

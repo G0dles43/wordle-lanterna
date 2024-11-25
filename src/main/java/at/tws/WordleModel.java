@@ -10,7 +10,7 @@ public class WordleModel {
     private String wordToGuess;
     private int attempts = 0;
     private final int maxAttempts = 5;
-    private Set<Character> usedLetters = new HashSet<>(); // Zbiór użytych liter
+    private Set<Character> usedLetters = new HashSet<>();
     private WordleWordProvider wordProvider;
 
     public enum Color {
@@ -43,7 +43,7 @@ public class WordleModel {
             char letter = word.charAt(i);
             if (letter == wordToGuess.charAt(i)) {
                 colors[i] = Color.GREEN;
-                wordToGuessCopy.setCharAt(i, '~'); // Usuwamy tę literę z dalszej analizy
+                wordToGuessCopy.setCharAt(i, '~');
             }
         }
 
@@ -53,7 +53,6 @@ public class WordleModel {
             if (colors[i] == null) { // Jeśli litera jeszcze nie została oznaczona jako zielona
                 if (wordToGuessCopy.indexOf(String.valueOf(letter)) != -1) {
                     colors[i] = Color.YELLOW;
-                    // Zastępujemy tę literę w kopii, by nie była użyta więcej niż raz
                     wordToGuessCopy.setCharAt(wordToGuessCopy.indexOf(String.valueOf(letter)), '~');
                 } else {
                     colors[i] = Color.RED; // Jeśli litera nie ma miejsca w słowie, kolorujemy na czerwono
@@ -115,6 +114,10 @@ public class WordleModel {
     public int getMaxAttempts() {
         return maxAttempts;
     }
+    public boolean isWordValid(String word) {
+        return wordProvider.isWordValid(word); // Delegowanie do WordleWordProvider
+    }
+
 
     public StringBuilder getAlphabet() {
         return alphabet;

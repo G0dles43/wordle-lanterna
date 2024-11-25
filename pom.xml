@@ -20,5 +20,10 @@
             <artifactId>lanterna</artifactId>
             <version>3.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
     </dependencies>
 </project>
