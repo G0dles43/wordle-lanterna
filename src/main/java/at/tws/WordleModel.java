@@ -1,9 +1,6 @@
 package at.tws;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WordleModel {
     private StringBuilder alphabet = new StringBuilder("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -13,6 +10,10 @@ public class WordleModel {
     private Set<Character> usedLetters = new HashSet<>();
     private WordleWordProvider wordProvider;
 
+    private int gamesPlayed = 0;
+    private int gamesWon = 0;
+    private int gamesLost = 0;
+
     public enum Color {
         GREEN,
         YELLOW,
@@ -21,15 +22,29 @@ public class WordleModel {
 
     public WordleModel() {
         this.wordProvider = new WordleWordProvider();
-        this.wordToGuess = wordProvider.fetchRandomWord();
+        int[] stats = StatsManager.loadStats();
+        this.gamesPlayed = stats[0];
+        this.gamesWon = stats[1];
+        this.gamesLost = stats[2];
+        resetGame();
     }
 
     public boolean guessWord(String word) {
         if (word.equals(this.wordToGuess)) {
+            gamesWon++;
+            gamesPlayed++;
+            StatsManager.saveStats(gamesPlayed, gamesWon, gamesLost);
             return true;
         } else {
             this.attempts++;
-            usedLetters.addAll(word.chars().mapToObj(c -> (char) c).toList());  // Dodanie użytych liter
+            usedLetters.addAll(word.chars().mapToObj(c -> (char) c).toList());
+
+            if (this.attempts >= maxAttempts) {
+                gamesLost++;
+                gamesPlayed++;
+                StatsManager.saveStats(gamesPlayed, gamesWon, gamesLost);
+            }
+
             return false;
         }
     }
@@ -38,7 +53,6 @@ public class WordleModel {
         Color[] colors = new Color[word.length()];
         StringBuilder wordToGuessCopy = new StringBuilder(wordToGuess);
 
-        // Pierwsza pętla: Sprawdzenie poprawnych liter w poprawnych miejscach (zielony)
         for (int i = 0; i < word.length(); i++) {
             char letter = word.charAt(i);
             if (letter == wordToGuess.charAt(i)) {
@@ -47,15 +61,14 @@ public class WordleModel {
             }
         }
 
-        // Druga pętla: Sprawdzenie liter, które są w słowie, ale w złym miejscu (żółty)
         for (int i = 0; i < word.length(); i++) {
             char letter = word.charAt(i);
-            if (colors[i] == null) { // Jeśli litera jeszcze nie została oznaczona jako zielona
+            if (colors[i] == null) {
                 if (wordToGuessCopy.indexOf(String.valueOf(letter)) != -1) {
                     colors[i] = Color.YELLOW;
                     wordToGuessCopy.setCharAt(wordToGuessCopy.indexOf(String.valueOf(letter)), '~');
                 } else {
-                    colors[i] = Color.RED; // Jeśli litera nie ma miejsca w słowie, kolorujemy na czerwono
+                    colors[i] = Color.RED;
                 }
             }
         }
@@ -63,11 +76,10 @@ public class WordleModel {
         return colors;
     }
 
-
-    // Definicja prostego enum dla kolorów
     public Map<Character, Color> getAlphabetColors() {
         Map<Character, Color> alphabetColors = new HashMap<>();
 
+        // Loop through the alphabet and assign colors based on guesses
         for (char letter : alphabet.toString().toCharArray()) {
             if (usedLetters.contains(letter)) {
                 if (wordToGuess.contains(Character.toString(letter))) {
@@ -83,12 +95,12 @@ public class WordleModel {
                     alphabetColors.put(letter, Color.RED);
                 }
             } else {
-                alphabetColors.put(letter, null); // Nie użyto
+                alphabetColors.put(letter, null); // Letter not used yet
             }
         }
-
         return alphabetColors;
     }
+
 
     public void resetGame() {
         this.wordToGuess = wordProvider.fetchRandomWord();
@@ -96,16 +108,24 @@ public class WordleModel {
         this.usedLetters.clear();
     }
 
+    public void resetStatistics() {
+        this.gamesPlayed = 0;
+        this.gamesWon = 0;
+        this.gamesLost = 0;
+    }
+
     public WordleWordProvider getWordProvider() {
         return wordProvider;
     }
+
     public Set<Character> getUsedLetters() {
-        return usedLetters;  // Zwraca zbiór użytych liter
+        return usedLetters;
     }
 
     public String getWordToGuess() {
         return wordToGuess;
     }
+
 
     public int getAttempts() {
         return attempts;
@@ -114,10 +134,22 @@ public class WordleModel {
     public int getMaxAttempts() {
         return maxAttempts;
     }
+
     public boolean isWordValid(String word) {
-        return wordProvider.isWordValid(word); // Delegowanie do WordleWordProvider
+        return wordProvider.isWordValid(word);
     }
 
+    public int getGamesPlayed() {
+        return gamesPlayed;
+    }
+
+    public int getGamesWon() {
+        return gamesWon;
+    }
+
+    public int getGamesLost() {
+        return gamesLost;
+    }
 
     public StringBuilder getAlphabet() {
         return alphabet;

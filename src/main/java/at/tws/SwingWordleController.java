@@ -10,8 +10,6 @@ public class SwingWordleController {
     public SwingWordleController(WordleModel model, SwingWordleView view) {
         this.model = model;
         this.view = view;
-
-        // Podłącz interakcje widoku z kontrolerem
         this.view.setSubmitListener(new SubmitListener());
         this.view.setRestartListener(new RestartListener());
     }
@@ -30,21 +28,41 @@ public class SwingWordleController {
                 return;
             }
 
+            int currentAttempt = model.getAttempts();
+
             if (model.guessWord(input)) {
-                view.displayMessage("Congratulations! You guessed the word!");
-                view.disableInput(); // Zablokuj pole po wygranej
+                view.displayHint(currentAttempt, input, model.hint(input));
+                view.showWinDialog();
+                view.disableInput();
+                view.disableSubmitButton();
             } else {
                 WordleModel.Color[] colors = model.hint(input);
-                view.displayHint(input, colors);
+                view.displayHint(currentAttempt, input, colors);
 
+                // Show hint after incorrect guess
+                String hint = "Try a letter that contains: ";
+                for (int i = 0; i < input.length(); i++) {
+                    if (colors[i] == WordleModel.Color.GREEN) {
+                        hint += input.charAt(i) + " ";
+                    }
+                }
+                view.displayMessage(hint);
+
+                // Check if attempts are over
                 if (model.getAttempts() >= model.getMaxAttempts()) {
-                    view.displayMessage("Game over! The word was: " + model.getWordToGuess());
-                    view.disableInput(); // Zablokuj pole po przegranej
+                    String correctWord = model.getWordToGuess();
+                    view.showGameOverDialog(correctWord);
+                    view.displayMessage("Game over! The word was: " + correctWord);
                 }
             }
-            view.clearInputField(); // Czyszczenie pola tekstowego
+
+
+            view.clearInputField();
+            view.updateAlphabetPanel();
         }
     }
+
+
 
 
     private class RestartListener implements ActionListener {

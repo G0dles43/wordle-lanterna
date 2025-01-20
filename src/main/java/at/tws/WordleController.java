@@ -7,7 +7,7 @@ public class WordleController {
     private final WordleModel model;
     private final WordleView view;
 
-    private int currentYPosition = 2; // Zarządzanie pozycją w kontrolerze
+    private int currentYPosition = 2;
 
 
 
@@ -19,13 +19,13 @@ public class WordleController {
     public void startGameLoop() throws IOException {
         while (true) {
             if (!displayMainMenu()) {
-                break; // Wyjście z gry
+                break;
             }
 
-            playGame(); // Główna rozgrywka
+            playGame();
 
             if (!displayPlayAgainMenu()) {
-                break; // Koniec gry
+                break;
             }
         }
     }
@@ -49,7 +49,7 @@ public class WordleController {
                     view.clearArea(0, 0, 40);
                     view.clearArea(0, 1, 40);
                     view.clearArea(0, 2, 40);
-                    return selectedOption == 0; // "Start Game" -> true, "Exit" -> false
+                    return selectedOption == 0;
             }
         }
     }
@@ -79,7 +79,7 @@ public class WordleController {
 
     private void playGame() throws IOException {
         model.resetGame();
-        currentYPosition = 2; // Resetuj pozycję na początku gry
+        currentYPosition = 2;
 
         while (true) {
             view.displayMessage(1, 1, "Input 5-letter word: ");
@@ -97,13 +97,13 @@ public class WordleController {
                 continue;
             }
 
-            view.clearArea(2, currentYPosition, 10); // Czyść poprzednie słowo w tym samym miejscu
+            view.clearArea(2, currentYPosition, 10);
             if (model.guessWord(word)) {
                 view.displayWinMessage();
                 break;
             } else {
                 WordleModel.Color[] colors = model.hint(word);
-                view.displayHint(word, colors, currentYPosition); // Użyj bieżącej pozycji
+                view.displayHint(word, colors, currentYPosition);
                 view.displayAlphabet(model.getAlphabetColors());
             }
 
@@ -112,7 +112,7 @@ public class WordleController {
                 break;
             }
 
-            currentYPosition++; // Zwiększ pozycję po każdym wyświetleniu podpowiedzi
+            currentYPosition++;
         }
     }
 

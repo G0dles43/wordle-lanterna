@@ -46,26 +46,10 @@ public class Main {
     }
 
     private static void startSwingMode() {
-        SwingUtilities.invokeLater(() -> {
-            JFrame startFrame = new JFrame("Wordle - Start");
-            startFrame.setSize(300, 200);
-            startFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            JPanel panel = new JPanel();
-            JButton startButton = new JButton("Start Game");
-            startButton.addActionListener(e -> {
-                startFrame.dispose();
                 WordleModel model = new WordleModel();
                 SwingWordleView view = new SwingWordleView(model);
                 SwingWordleController controller = new SwingWordleController(model, view);
                 view.setVisible(true);
-            });
-
-            panel.add(startButton);
-            startFrame.add(panel);
-            startFrame.setVisible(true);
-        });
     }
-
 }
 
